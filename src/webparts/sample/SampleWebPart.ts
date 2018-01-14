@@ -11,16 +11,35 @@ import * as strings from 'SampleWebPartStrings';
 import Sample from './components/Sample';
 import { ISampleProps } from './components/ISampleProps';
 
+import { Environment, EnvironmentType } from '@microsoft/sp-core-library';
+import IDataProvider from './dataProviders/IDataProvider';
+import MockDataProvider from './dataProviders/MockDataProvider';
+import SpDataProvider from './dataProviders/SpDataProvider';
+
 export interface ISampleWebPartProps {
   description: string;
 }
 
 export default class SampleWebPart extends BaseClientSideWebPart<ISampleWebPartProps> {
-
   public render(): void {
+    let dataProvider: IDataProvider;
+    switch (Environment.type) {
+      case EnvironmentType.Local:
+      case EnvironmentType.Test:
+        dataProvider = new MockDataProvider();
+        break;
+
+      case EnvironmentType.ClassicSharePoint:
+      case EnvironmentType.SharePoint:
+      default:
+        dataProvider = new SpDataProvider(this.context);
+        break;
+    }
+
     const element: React.ReactElement<ISampleProps > = React.createElement(
       Sample,
       {
+        dataProvider: dataProvider,
         description: this.properties.description
       }
     );
